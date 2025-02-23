@@ -20,6 +20,8 @@ services:
     command: ["redis-server", "/usr/local/etc/redis/redis.conf", "--slaveof", "redis-master", "6379"]
     ports:
       - "6380:6379"
+    depends_on:
+      - redis_master
 
   app:
     build: .
@@ -54,6 +56,8 @@ services:
       - redis_slave
     networks:
       - my_network
+
+
 
   redisinsight:
     image: redislabs/redisinsight:latest
