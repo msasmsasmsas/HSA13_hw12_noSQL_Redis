@@ -10,6 +10,8 @@ services:
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     ports:
       - "6379:6379"
+    networks:
+      - redis_network
 
   redis-slave:
     image: redis:latest
@@ -21,6 +23,8 @@ services:
       - "6380:6379"
     depends_on:
       - redis-master
+    networks:
+      - redis_network
 
   app:
     build: ./loadtest_fastapi
@@ -30,6 +34,8 @@ services:
     depends_on:
       - redis-master
       - redis-slave
+    networks:
+      - redis_network
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -41,7 +47,7 @@ services:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: password
     networks:
-      - my_network
+      - redis_network
 
 
   redis-commander:
@@ -54,7 +60,7 @@ services:
       - redis-master
       - redis-slave
     networks:
-      - my_network
+      - redis_network
 
 
 
@@ -67,20 +73,23 @@ services:
       - redis-master
       - redis-slave
     networks:
-      - my_network
+      - redis_network
 
 
   load-tester:
     build:
-      context: ./load-test
-      dockerfile: Dockerfile.loadtest
+      context: .
+      dockerfile: load-test/Dockerfile.loadtest
     container_name: load_tester
+    volumes:
+      - ./load-test:/load-test
+    networks:
+      - redis_network
     depends_on:
       - redis-master
       - redis-slave
-    networks:
-      - my_network
+
 
 networks:
-  my_network:
+  redis_network:
     driver: bridge

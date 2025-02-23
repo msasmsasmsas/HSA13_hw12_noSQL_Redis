@@ -3,8 +3,13 @@ FROM alpine:latest
 
 RUN apk add --no-cache redis
 
-COPY load-test /load-test
+COPY ./load-test /load-test
+
+
 
 WORKDIR /load-test
 
-CMD ["sh", "-c", "./load_test_redis1.sh && ./load_test_redis2.sh"]
+RUN chmod +x load_test_redis_rdb.sh
+# CMD ["sh", "-c", "./load_test_redis_rdb.sh"]
+
+CMD ["sh", "-c", "./load_test_redis_rdb.sh && ./load_test_redis_aof.sh"]
