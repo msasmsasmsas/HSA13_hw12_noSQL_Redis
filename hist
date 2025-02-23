@@ -13,3 +13,5 @@ dotnet run --project QueueApi
 
 http://localhost:8081
 http://localhost:5540/
+
+git config --global --add safe.directory E:/HSA13/HSA13_hw12_noSQL_Redis/HSA13_hw12_noSQL_Redis

@@ -1,0 +1,6 @@
+fastapi
+redis[asyncio]
+uvicorn
+httpx
+pytest
+pytest-asyncio
