@@ -66,10 +66,12 @@ services:
     networks:
       - my_network
 
-  load-test:
-    build: ./loadtest_fastapi
-    volumes:
-      - ./loadtest_fastapi:/workspace
+
+  load-tester:
+    build:
+      context: .
+      dockerfile: Dockerfile.loadtest
+    container_name: load_tester
     depends_on:
       - redis_master
       - redis_slave
