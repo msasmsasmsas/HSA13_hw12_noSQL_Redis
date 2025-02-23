@@ -1,0 +1,10 @@
+# Dockerfile.loadtest
+FROM alpine:latest
+
+RUN apk add --no-cache redis
+
+COPY load-test /load-test
+
+WORKDIR /load-test
+
+CMD ["sh", "-c", "./load_test_redis1.sh && ./load_test_redis2.sh"]

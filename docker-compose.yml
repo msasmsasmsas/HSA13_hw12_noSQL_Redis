@@ -1,27 +1,34 @@
-name: prctr-hsa-hw12
+name: hsa13-hw12
+
+version: '3.8'
 
 services:
-  redis1:
+  redis-master:
     image: redis:latest
-    container_name: redis1
+    container_name: redis_master
+    volumes:
+      - ./redis-master/redis.conf:/usr/local/etc/redis/redis.conf
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     ports:
       - "6379:6379"
-    volumes:
-      - ./redis1/redis.conf:/usr/local/etc/redis/redis.conf
-    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
-    networks:
-      - my_network
 
-  redis2:
+  redis-slave:
     image: redis:latest
-    container_name: redis2
+    container_name: redis_slave
+    volumes:
+      - ./redis-slave/redis.conf:/usr/local/etc/redis/redis.conf
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf", "--slaveof", "redis-master", "6379"]
     ports:
       - "6380:6379"
-    volumes:
-      - ./redis2/redis.conf:/usr/local/etc/redis/redis.conf
-    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
-    networks:
-      - my_network
+
+  app:
+    build: .
+    container_name: fastapi_app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis-master
+      - redis-slave
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -41,10 +48,10 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - REDIS_HOSTS=local1:redis1:6379,local2:redis2:6379
+      - REDIS_HOSTS=local1:redis_master:6379,local2:redis_slave:6379
     depends_on: 
-      - redis1
-      - redis2
+      - redis_master
+      - redis_slave
     networks:
       - my_network
 
@@ -54,18 +61,18 @@ services:
     ports:
       - "5540:5540"
     depends_on:
-      - redis1
-      - redis2
+      - redis_master
+      - redis_slave
     networks:
       - my_network
 
   load-test:
-    build: ./load-test
+    build: ./loadtest_fastapi
     volumes:
-      - ./load-test:/workspace
+      - ./loadtest_fastapi:/workspace
     depends_on:
-      - redis1
-      - redis2
+      - redis_master
+      - redis_slave
     networks:
       - my_network
 
