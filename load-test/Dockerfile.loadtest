@@ -1,15 +1,41 @@
-# Dockerfile.loadtest
-FROM alpine:latest
+FROM debian:bookworm-slim
 
-RUN apk add --no-cache redis
+# Устанавливаем необходимые пакеты
+RUN apt update && apt install -y \
+    python3 \
+    python3-pip \
+    python3-venv \
+    python3-pika \
+    redis-tools \
+    bash \
+    bc \
+    curl \
+    wget \
+    build-essential \
+    libssl-dev \
+    zlib1g-dev \
+    pcre2-utils \
+    redis-server \
+    tar && \
+    apt clean && rm -rf /var/lib/apt/lists/*
 
+# Создаем виртуальное окружение и устанавливаем pika
+RUN python3 -m venv /venv && /venv/bin/pip install pika
+
+# Создаем директорию для тестов
+RUN mkdir -p /load-test
+
+# Копируем файлы из папки `load-test` в контейнер
 COPY ./load-test /load-test
 
-
-
+# Указываем рабочую директорию
 WORKDIR /load-test
 
-RUN chmod +x load_test_redis_rdb.sh
-# CMD ["sh", "-c", "./load_test_redis_rdb.sh"]
+# Даем права на выполнение всем скриптам
+RUN chmod +x /load-test/*.sh
 
-CMD ["sh", "-c", "./load_test_redis_rdb.sh && ./load_test_redis_aof.sh"]
+# Выводим список файлов (для отладки)
+RUN ls -lah /load-test
+
+# Запуск тестов Redis и RabbitMQ
+CMD ["sh", "-c", "sleep 10 && /load-test/load_test_redis_rdb.sh && /load-test/load_test_redis_aof.sh && /load-test/load_test_rabbitmq.sh"]

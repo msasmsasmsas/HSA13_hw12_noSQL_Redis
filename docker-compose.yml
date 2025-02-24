@@ -26,7 +26,7 @@ services:
     networks:
       - redis_network
 
-  app:
+  fastapi-app:
     build: ./loadtest_fastapi
     container_name: fastapi_app
     ports:
@@ -80,7 +80,7 @@ services:
     build:
       context: .
       dockerfile: load-test/Dockerfile.loadtest
-    container_name: load_tester
+    container_name: hsa13-hw12-load-tester
     volumes:
       - ./load-test:/load-test
     networks:
@@ -88,6 +88,8 @@ services:
     depends_on:
       - redis-master
       - redis-slave
+      - fastapi-app
+      - rabbitmq
 
 
 networks:
