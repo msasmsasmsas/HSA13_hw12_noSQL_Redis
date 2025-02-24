@@ -1,49 +1,37 @@
 import pika
+import os
 import time
 
-RABBITMQ_HOST = "rabbitmq"
+# Получаем переменные окружения
+RABBITMQ_USER = "admin"
+RABBITMQ_PASS = "password"
+RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "rabbitmq")  # <-- Теперь это передается через docker-compose.yml
 QUEUE_NAME = "test_queue"
 
-# Подключение к RabbitMQ
-connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
-channel = connection.channel()
+# Настройка соединения
+credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASS)
+parameters = pika.ConnectionParameters(host=RABBITMQ_HOST, credentials=credentials)
 
-# Создаем очередь
-channel.queue_declare(queue=QUEUE_NAME)
-
-# Отправка сообщений
-messages = 1000
-sent_count = 0
-error_count = 0
-
-start_time = time.time()
-for i in range(messages):
+# Подключение с попытками повторного подключения
+max_retries = 10
+for attempt in range(max_retries):
     try:
-        message = f"Message {i}"
-        channel.basic_publish(exchange="", routing_key=QUEUE_NAME, body=message)
-        sent_count += 1
-        print(f"Sent: {message}")
-    except Exception as e:
-        error_count += 1
-        print(f"Error: {e}")
-
-end_time = time.time()
-elapsed_time = end_time - start_time
-
-# Получение сообщений
-received_count = 0
-for method_frame, properties, body in channel.consume(QUEUE_NAME, inactivity_timeout=5):
-    if method_frame:
-        received_count += 1
-        print(f"Received: {body.decode()}")
-        channel.basic_ack(method_frame.delivery_tag)
-    else:
+        print(f"Attempt {attempt + 1}: Connecting to RabbitMQ at {RABBITMQ_HOST}...")
+        connection = pika.BlockingConnection(parameters)
+        channel = connection.channel()
+        print("Connected to RabbitMQ!")
         break
+    except pika.exceptions.AMQPConnectionError as e:
+        print(f"Connection failed: {e}. Retrying in 5 seconds...")
+        time.sleep(5)
+else:
+    print("Failed to connect to RabbitMQ after multiple attempts.")
+    exit(1)
+
+# Объявляем очередь
+channel.queue_declare(queue=QUEUE_NAME, durable=True)
+print(f"Queue '{QUEUE_NAME}' is ready. Waiting for messages...")
 
 # Закрываем соединение
-channel.close()
 connection.close()
-
-# Логирование результата
-print(f"Total Sent: {sent_count}, Total Received: {received_count}, Errors: {error_count}")
-print(f"Elapsed Time: {elapsed_time:.4f} seconds")
+print("Connection closed.")
