@@ -1,10 +1,15 @@
 # HSA13_hw12_noSQL_Redis
 
 hsa13-hw12-load-tester  | Running Redis CLI Load Test (RDB)...
+
 hsa13-hw12-load-tester  | {
+
 hsa13-hw12-load-tester  |   "transactions": 1000,
+
 hsa13-hw12-load-tester  |   "availability": 100,
+
 hsa13-hw12-load-tester  |   "elapsed_time": 8.806067484,
+
 hsa13-hw12-load-tester  |   "data_transferred": 0,
 hsa13-hw12-load-tester  |   "response_time": .00880606748400000000,
 hsa13-hw12-load-tester  |   "transaction_rate": 113.55806684617498895378,
